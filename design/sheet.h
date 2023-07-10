@@ -21,14 +21,23 @@ public:
     void PrintValues(std::ostream& output) const override;
     void PrintTexts(std::ostream& output) const override;
 
-    const Cell* GetConcreteCell(Position pos) const;
-    Cell* GetConcreteCell(Position pos);
+    void AddCell(const Position &pos, const Cell *new_cell);
+
+    void DeleteCell(const Position &pos);
 
 private:
-    void MaybeIncreaseSizeToIncludePosition(Position pos);
-    void PrintCells(std::ostream& output,
-                    const std::function<void(const CellInterface&)>& printCell) const;
-    Size GetActualSize() const;
 
-    std::vector<std::vector<std::unique_ptr<Cell>>> cells_;
+    enum TypePrint
+    {
+        VALUE,
+        TEXT
+    };
+
+    void UpdatePrintAreaSize();
+
+    void Print(std::ostream& output, TypePrint type_print) const;
+
+    Size print_area_size_;
+
+    std::unordered_map<Position, std::unique_ptr<CellInterface>> sheet_;
 };
