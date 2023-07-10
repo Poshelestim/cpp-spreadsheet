@@ -3,34 +3,56 @@
 #include "common.h"
 #include "formula.h"
 
+#include <cmath>
+#include <optional>
 #include <functional>
+#include <set>
 #include <unordered_set>
 
 class Sheet;
 
-class Cell : public CellInterface {
+enum ImplType
+{
+	EMPTY,
+	TEXT,
+	FORMULA
+};
+
+class Cell : public CellInterface
+{
 public:
-    Cell(Sheet& sheet);
-    ~Cell();
 
-    void Set(std::string text);
-    void Clear();
+	using CellPtr = std::unique_ptr<Cell>;
 
-    Value GetValue() const override;
-    std::string GetText() const override;
-    std::vector<Position> GetReferencedCells() const override;
+    Cell(SheetInterface &sheet, const std::string &text);
 
-    bool IsReferenced() const;
+	~Cell();
+
+	void Set(std::string text);
+	void Clear();
+
+    [[nodiscard]] Value GetValue() const override;
+    [[nodiscard]] std::string GetText() const override;
+
+    [[nodiscard]] std::vector<Position> GetReferencedCells() const override;
+
+    [[nodiscard]] bool hasCircularDependency(const Cell *main_cell, Position pos) const;
+	void InvalidateCache();
+
+    [[nodiscard]] ImplType GetType() const;
+
+    void AddDependencedCell(Position pos);
+
+    void DeleteDependencedCells();
 
 private:
+
     class Impl;
     class EmptyImpl;
     class TextImpl;
     class FormulaImpl;
 
-    std::unique_ptr<Impl> impl_;
-
-    // Добавьте поля и методы для связи с таблицей, проверки циклических 
-    // зависимостей, графа зависимостей и т. д.
-
+    SheetInterface &sheet_;
+    std::unique_ptr<Impl> cell_value_;
+    std::set<Position> dependenced_cells_;
 };
